@@ -1,61 +1,119 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import matplotlib.pyplot as plt
+import torchvision
+from torchvision import transforms
+from torch.utils.data import DataLoader
+from time import time
+from tqdm import tqdm
 
-# 生成合成数据
-torch.manual_seed(42)  # 保证可重复性
-X = torch.linspace(-5, 5, 100).view(-1, 1)
-Y = 0.5 * X ** 2 + 2 * X + 3 + torch.randn(X.size()) * 0.5  # 带噪声的二次函数
+# 设备检测
+device = torch.device(
+    "cuda" if torch.cuda.is_available() else
+    "mps" if torch.backends.mps.is_available() else
+    "cpu"
+)
+print(f"Using device: {device}")
+
+# 数据预处理
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
+
+# 数据集加载
+train_set = torchvision.datasets.MNIST(
+    root='./data',
+    train=True,
+    download=True,
+    transform=transform
+)
+test_set = torchvision.datasets.MNIST(
+    root='./data',
+    train=False,
+    download=True,
+    transform=transform
+)
+
+# MPS需要设置num_workers=0
+num_workers = 0 if device.type == "mps" else 4
+train_loader = DataLoader(train_set, batch_size=128, shuffle=True, num_workers=num_workers)
+test_loader = DataLoader(test_set, batch_size=256, shuffle=False, num_workers=num_workers)
 
 
 # 定义神经网络模型
-class RegressionModel(nn.Module):
+class MNISTNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(1, 10),
-            nn.ReLU(),
-            nn.Linear(10, 1)
-        )
+        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        self.fc1 = nn.Linear(64 * 7 * 7, 128)
+        self.fc2 = nn.Linear(128, 10)
+        self.pool = nn.MaxPool2d(2, 2)
 
     def forward(self, x):
-        return self.net(x)
+        x = self.pool(torch.relu(self.conv1(x)))
+        x = self.pool(torch.relu(self.conv2(x)))
+        x = x.view(-1, 64 * 7 * 7)
+        x = torch.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 
-# 初始化模型、损失函数和优化器
-model = RegressionModel()
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+model = MNISTNet().to(device)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+
+# 训练函数
+def train(model, device, loader, criterion, optimizer):
+    model.train()
+    total_loss = 0
+
+    for images, labels in tqdm(loader):
+        # 处理MPS设备的数据类型问题
+        if device.type == "mps":
+            images = images.to(device).to(torch.float32)
+            labels = labels.to(device).to(torch.long)
+        else:
+            images, labels = images.to(device), labels.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    return total_loss / len(loader)
+
+
+# 测试函数
+def test(model, device, loader):
+    model.eval()
+    correct = 0
+
+    with torch.no_grad():
+        for images, labels in loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            pred = outputs.argmax(dim=1)
+            correct += pred.eq(labels).sum().item()
+
+    return 100.0 * correct / len(loader.dataset)
+
 
 # 训练循环
-epochs = 1000
+epochs = 5
 for epoch in range(epochs):
-    # 前向传播
-    predictions = model(X)
+    start_time = time()
+    train_loss = train(model, device, train_loader, criterion, optimizer)
+    test_acc = test(model, device, test_loader)
+    elapsed = time() - start_time
 
-    # 计算损失
-    loss = criterion(predictions, Y)
+    print(f"Epoch {epoch + 1}/{epochs} - {elapsed:.2f}s")
+    print(f"Train loss: {train_loss:.4f} | Test accuracy: {test_acc:.2f}%")
 
-    # 反向传播和优化
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    # 每100次epoch打印损失
-    if (epoch + 1) % 100 == 0:
-        print(f'Epoch [{epoch + 1}/{epochs}], Loss: {loss.item():.4f}')
-
-# 可视化结果
-with torch.no_grad():
-    predicted = model(X).numpy()
-
-plt.figure(figsize=(10, 6))
-plt.scatter(X.numpy(), Y.numpy(), alpha=0.6, label='Original Data')
-plt.plot(X.numpy(), predicted, 'r', linewidth=2, label='Model Prediction')
-plt.title('PyTorch Regression Demo')
-plt.xlabel('Input')
-plt.ylabel('Output')
-plt.legend()
-plt.show()
+# 保存模型（可选）
+# torch.save(model.state_dict(), "mnist_model.pth")
