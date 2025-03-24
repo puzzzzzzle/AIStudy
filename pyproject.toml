@@ -14,4 +14,5 @@ dependencies = [
     "torch",
     "torchvision",
     "torchaudio",
+    "pytorch-lightning",
 ]
