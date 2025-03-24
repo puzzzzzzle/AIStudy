@@ -5,11 +5,13 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "matplotlib",
+    "seaborn",
     "numpy",
     "pandas",
     "scipy",
-    "matplotlib",
-    "seaborn",
     "scikit-learn",
     "jupyter",
+    "torch",
+    "torchvision",
+    "torchaudio",
 ]
