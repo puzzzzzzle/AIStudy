@@ -24,4 +24,10 @@ dependencies = [
     "torchvision", # 计算机视觉工具库，包含数据集/模型架构/图像变换方法
     "torchaudio", # 音频处理工具库，支持语音数据集和特征提取
     "pytorch-lightning", # PyTorch轻量级封装，简化训练流程和分布式训练
+
+    # 强化学习专用库
+    "stable-baselines3", # 最主流的RL实现库（PPO/DQN/SAC等算法）
+    # 其他重要库
+    "sb3-contrib", # Stable-Baselines3扩展包（额外算法实现）
+    "mujoco", # 物理仿真引擎（复杂机器人控制环境）
 ]
