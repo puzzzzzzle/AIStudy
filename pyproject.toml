@@ -4,15 +4,24 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
-    "matplotlib",
-    "seaborn",
-    "numpy",
-    "pandas",
-    "scipy",
-    "scikit-learn",
-    "jupyter",
-    "torch",
-    "torchvision",
-    "torchaudio",
-    "pytorch-lightning",
+    # 数据可视化
+    "matplotlib", # 基础绘图库，支持各种静态/交互式图表（折线图/散点图/柱状图等）
+    "seaborn", # 基于matplotlib的高级统计可视化，内置美观主题和复杂图表类型
+
+    # 数据处理与计算
+    "numpy", # 数值计算基础库，提供高效多维数组(ndarray)和数学函数
+    "pandas", # 数据结构化处理工具，DataFrame为核心，支持数据清洗/分析/IO操作
+    "scipy", # 科学计算工具包，包含优化/积分/插值/统计等高级数学模块
+
+    # 机器学习框架
+    "scikit-learn", # 传统机器学习库，包含分类/回归/聚类等算法及评估工具
+
+    # 开发环境
+    "jupyter", # 交互式笔记本环境，支持代码/文档/可视化混合编排
+
+    # PyTorch生态
+    "torch", # PyTorch深度学习框架，支持动态计算图和GPU加速
+    "torchvision", # 计算机视觉工具库，包含数据集/模型架构/图像变换方法
+    "torchaudio", # 音频处理工具库，支持语音数据集和特征提取
+    "pytorch-lightning", # PyTorch轻量级封装，简化训练流程和分布式训练
 ]
