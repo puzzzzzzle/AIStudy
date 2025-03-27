@@ -31,7 +31,10 @@ dependencies = [
     "mujoco", # 物理仿真引擎（复杂机器人控制环境）
 
     # openai
-    "openai"
+    "openai",
+
+    # tools
+    "pyyaml",
 ]
 [tool.uv.sources]
 bird-feeder = { workspace = true }
