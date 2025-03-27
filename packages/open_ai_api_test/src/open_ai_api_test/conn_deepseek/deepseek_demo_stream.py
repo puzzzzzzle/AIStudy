@@ -1,14 +1,17 @@
 from openai import OpenAI
-import yaml
-from pathlib import Path
 
-key_path = Path(__file__).parent / "../../../api_key.yaml"
-key_path = key_path.resolve().absolute()
-key_config = yaml.safe_load(open(key_path))
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from key_loadder import load_key
+
+api_key, base_url = load_key()
+
 # 初始化OpenAI客户端
 client = OpenAI(
-    api_key=key_config["default"]["api_key"],
-    base_url=key_config["default"]["url"],
+    api_key=api_key,
+    base_url=base_url,
 )
 
 
