@@ -1,7 +1,6 @@
 [project]
-name = "aistudy"
+name = "AIStudy"
 version = "0.1.0"
-description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     # 数据可视化
@@ -31,3 +30,9 @@ dependencies = [
     "sb3-contrib", # Stable-Baselines3扩展包（额外算法实现）
     "mujoco", # 物理仿真引擎（复杂机器人控制环境）
 ]
+[tool.uv.sources]
+bird-feeder = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+#exclude = ["packages/seeds"]

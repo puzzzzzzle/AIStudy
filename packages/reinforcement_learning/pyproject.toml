@@ -1,0 +1,17 @@
+[project]
+name = "reinforcement-learning"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "puzzzzzzle", email = "2359173906@qq.com" }
+]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+reinforcement-learning = "reinforcement_learning:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
