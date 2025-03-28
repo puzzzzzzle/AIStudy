@@ -32,13 +32,27 @@ dependencies = [
 
     # openai
     "openai",
-
     # tools
     "pyyaml",
 ]
-[tool.uv.sources]
-bird-feeder = { workspace = true }
 
+[tool.uv.sources]
+# 标记为workspace
+bird-feeder = { workspace = true }
+# torch Windows上施一公cuda版本
+torch = [
+    { index = "pytorch-cu124", marker = "sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu124", marker = "sys_platform == 'win32'" },
+]
+# torch Windows上施一公cuda版本
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+# 标记为workspace
 [tool.uv.workspace]
 members = ["packages/*"]
 #exclude = ["packages/seeds"]

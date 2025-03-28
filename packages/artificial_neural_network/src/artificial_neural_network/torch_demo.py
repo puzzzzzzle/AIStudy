@@ -105,15 +105,19 @@ def test(model, device, loader):
 
 
 # 训练循环
-epochs = 5
-for epoch in range(epochs):
-    start_time = time()
-    train_loss = train(model, device, train_loader, criterion, optimizer)
-    test_acc = test(model, device, test_loader)
-    elapsed = time() - start_time
+def main():
+    epochs = 5
+    for epoch in range(epochs):
+        start_time = time()
+        train_loss = train(model, device, train_loader, criterion, optimizer)
+        test_acc = test(model, device, test_loader)
+        elapsed = time() - start_time
 
-    print(f"Epoch {epoch + 1}/{epochs} - {elapsed:.2f}s")
-    print(f"Train loss: {train_loss:.4f} | Test accuracy: {test_acc:.2f}%")
+        print(f"Epoch {epoch + 1}/{epochs} - {elapsed:.2f}s")
+        print(f"Train loss: {train_loss:.4f} | Test accuracy: {test_acc:.2f}%")
 
-# 保存模型（可选）
-# torch.save(model.state_dict(), "mnist_model.pth")
+    # 保存模型（可选）
+    # torch.save(model.state_dict(), "mnist_model.pth")
+
+if __name__ == '__main__':
+    main()
