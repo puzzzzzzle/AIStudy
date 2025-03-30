@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from key_loadder import load_key
 
-api_key, base_url = load_key()
+api_key, base_url,model = load_key()
 
 # 初始化OpenAI客户端
 client = OpenAI(
@@ -21,7 +21,7 @@ messages = [
 ]
 
 completion = client.chat.completions.create(
-    model="deepseek-r1",  # 此处以 deepseek-r1 为例，可按需更换模型名称。
+    model=model,  # 此处以 deepseek-r1 为例，可按需更换模型名称。
     messages=messages
 )
 
