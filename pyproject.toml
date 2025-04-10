@@ -1,7 +1,7 @@
 [project]
 name = "AIStudy"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = "==3.11.11"
 dependencies = [
     # 数据可视化
     "matplotlib", # 基础绘图库，支持各种静态/交互式图表（折线图/散点图/柱状图等）
@@ -28,7 +28,9 @@ dependencies = [
     "openai",
     # tools
     "pyyaml",
-    "gymnasium[toy-text]",
+    # gym games
+    "swig",
+    "gymnasium[all]",
 ]
 
 [tool.uv.sources]
