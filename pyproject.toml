@@ -1,7 +1,7 @@
 [project]
 name = "AIStudy"
 version = "0.1.0"
-requires-python = "==3.11.11"
+requires-python = ">=3.13"
 dependencies = [
     # 数据可视化
     "matplotlib", # 基础绘图库，支持各种静态/交互式图表（折线图/散点图/柱状图等）
@@ -29,8 +29,7 @@ dependencies = [
     # tools
     "pyyaml",
     # gym games
-    "swig",
-    "gymnasium[all]",
+    "gymnasium[all]", #依赖swig&c++编译环境, 手动安装 : pacman -Sy swig
 ]
 
 [tool.uv.sources]
