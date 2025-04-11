@@ -29,7 +29,19 @@
 - 直接寻找最优价值函数：
   $$V^*(s) = \max_a \sum_{s'} P(s'|s,a)[R(s,a,s') + \gamma V^*(s')]$$
 
-## 时序差分算法
+## 时序差分算法（temporal difference，TD）
+- 蒙特卡洛方法价值更新方式:
+  $$V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]$$
+  （使用完整回报 $G_t = R_{t+1} + \gamma R_{t+2} + \cdots + \gamma^{T-1}R_T$）
+
+- 时序差分（temporal difference，TD）
+  $$V(S_t) \leftarrow V(S_t) + \alpha[R_{t} + \gamma V(S_{t+1}) - V(S_t)]$$
+  （误差(error) $\delta_t = R_{t} + \gamma V(S_{t+1}) - V(S_t)$）
+
+- 关键区别：
+    - 蒙特卡洛：必须等待episode结束才能更新
+    - TD方法：可进行单步增量式更新
+    - 统一形式：$V(S_t) \leftarrow V(S_t) + \alpha[\text{目标} - V(S_t)]$
 
 ### Sarsa算法
 
@@ -56,6 +68,7 @@
 ## Dyna-Q算法
 - 混合方法（模型基础+无模型）
 - 基于Q-Learning的离线策略
+  - 如果Q-planning次数为0, 就是Q-Learning
 - 核心思想：结合实际经验与模拟经验
 - 算法步骤：
     1. 真实环境交互更新Q值：
