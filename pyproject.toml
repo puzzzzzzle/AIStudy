@@ -30,6 +30,7 @@ dependencies = [
     "pyyaml",
     # gym games
     "gymnasium[all]", #依赖swig&c++编译环境, 手动安装 : pacman -Sy swig
+    "notebook>=7.3.3",
 ]
 
 [tool.uv.sources]
