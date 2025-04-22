@@ -1,6 +1,7 @@
 import logging
 
 import typer
+from typing_extensions import Annotated
 from rich.console import Console
 from rich.traceback import install
 from rich import print as rich_print
@@ -14,7 +15,10 @@ def do_something(info: str) -> None:
 
 
 @app.command()
-def hello(name: str):
+def hello(name: Annotated[str, typer.Argument(help="The person to greet")]):
+    """
+    Say hello to the user.
+    """
     print(f"Hello {name}")
 
 
@@ -34,6 +38,8 @@ def test_traceback(info: str):
         do_something(info)
     except Exception:
         console.print_exception(show_locals=True)
+
+
 @app.command()
 def test_rich_print(info: str):
     rich_print(f"Hello, [bold magenta]World[/bold magenta]!", ":vampire:", locals())
@@ -41,10 +47,12 @@ def test_rich_print(info: str):
 
 
 test_data = [
-    {"jsonrpc": "2.0", "method": "sum", "params": [None, 1, 2, 4, False, True], "id": "1",},
+    {"jsonrpc": "2.0", "method": "sum", "params": [None, 1, 2, 4, False, True], "id": "1", },
     {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
     {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": "2"},
 ]
+
+
 @app.command()
 def test_log():
     console = Console()
@@ -56,6 +64,7 @@ def test_log():
     movies = ["Deadpool", "Rise of the Skywalker"]
     console.log("Hello from", console, "!")
     console.log(test_data, log_locals=True)
+
 
 @app.command()
 def test_logging():
@@ -76,6 +85,7 @@ def test_logging():
         logger.info(f"get error")
         logger.exception(e)
         # logger.exception(e)
+
 
 if __name__ == "__main__":
     app()
