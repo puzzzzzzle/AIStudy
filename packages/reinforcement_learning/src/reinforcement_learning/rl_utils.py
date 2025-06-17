@@ -79,12 +79,12 @@ def train_off_policy_agent(env, agent, num_episodes, replay_buffer, minimal_size
 
 
 def compute_advantage(gamma, lmbda, td_delta):
-    td_delta = td_delta.detach().numpy()
+    td_delta = td_delta.detach().cpu().numpy().flatten()  # 保证是一维
     advantage_list = []
     advantage = 0.0
     for delta in td_delta[::-1]:
         advantage = gamma * lmbda * advantage + delta
         advantage_list.append(advantage)
     advantage_list.reverse()
-    return torch.tensor(advantage_list, dtype=torch.float)
-                
+    advantage_arr = np.array(advantage_list, dtype=np.float32)  # 先转成np.array
+    return torch.from_numpy(advantage_arr)  # 返回torch tensor
