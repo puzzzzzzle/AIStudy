@@ -277,7 +277,7 @@ if __name__ == '__main__':
     # print(np.mean(result_list))
     # print(np.std(result_list))
 
-    result_list = train_ray(num_workers=8,each_worker_samples=4,num_episodes=500,batch_size=4096) # 32*100 = 3200 episodes
+    result_list = train_ray(num_workers=10,each_worker_samples=4,num_episodes=500,batch_size=4096) # 32*100 = 3200 episodes
     show_plt(result_list)
     print(result_list)
     print(np.mean(result_list))
