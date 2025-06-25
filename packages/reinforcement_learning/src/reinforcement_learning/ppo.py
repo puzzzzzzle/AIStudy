@@ -29,12 +29,12 @@ def show_plt(return_list):
     plt.title('PPO')
     plt.show()
 
-    mv_return = moving_average(return_list, 9)
-    plt.plot(episodes_list, mv_return)
-    plt.xlabel('Episodes')
-    plt.ylabel('Returns')
-    plt.title('PPO')
-    plt.show()
+    # mv_return = moving_average(return_list, 9)
+    # plt.plot(episodes_list, mv_return)
+    # plt.xlabel('Episodes')
+    # plt.ylabel('Returns')
+    # plt.title('PPO')
+    # plt.show()
 
 
 class PolicyNet(torch.nn.Module):
@@ -200,9 +200,28 @@ class Worker:
             state = next_state
             episode_return += reward
         return transition_dict, episode_return
+    def sample_n(self, n:int):
+        transition_dicts = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
+        returns = []
+        for _ in range(n):
+            transition_dict, episode_return = self.sample()
+            for k in transition_dicts:
+                transition_dicts[k].extend(transition_dict[k])
+            returns.append(episode_return)
+        return transition_dicts, returns
 
-
+def minibatch_generator(transitions, batch_size):
+    N = len(transitions['states'])
+    indices = np.arange(N)
+    np.random.shuffle(indices)
+    for start in range(0, N, batch_size):
+        end = start + batch_size
+        batch_idx = indices[start:end]
+        batch = {k: np.array(v)[batch_idx] for k, v in transitions.items()}
+        yield batch
 def train_ray(num_workers=4,
+              each_worker_samples=10,
+              batch_size=256,
               num_episodes=500,
               epochs=10,
               env_name='CartPole-v1',
@@ -221,13 +240,14 @@ def train_ray(num_workers=4,
     ]
 
     return_list = []
-    for _ in tqdm(range(num_episodes)):
+    pbar = tqdm(total=num_episodes)
+    for i_episode in range(num_episodes):
         actor_weights = agent.actor.state_dict()
         critic_weights = agent.critic.state_dict()
         set_weights_tasks = [w.set_weights.remote(actor_weights, critic_weights) for w in workers]
         ray.get(set_weights_tasks)
 
-        sample_tasks = [w.sample.remote() for w in workers]
+        sample_tasks = [w.sample_n.remote(each_worker_samples) for w in workers]
         results = ray.get(sample_tasks)
 
         all_transitions = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
@@ -237,8 +257,14 @@ def train_ray(num_workers=4,
                 all_transitions[k].extend(transition_dict[k])
             episode_returns.append(episode_return)
 
-        agent.update(all_transitions)
-        return_list.append(np.mean(episode_returns))
+        for batch in minibatch_generator(all_transitions, batch_size):
+            agent.update(batch)
+        return_mean=float(np.mean(episode_returns))
+        return_list.append(return_mean)
+        pbar.set_postfix(
+            {'episode': f'{i_episode}', 'return': f'{return_mean:.3f}'})
+        pbar.update(1)
+
 
     ray.shutdown()
     return return_list
@@ -246,5 +272,13 @@ def train_ray(num_workers=4,
 
 if __name__ == '__main__':
     # result_list = train()
-    result_list = train_ray(num_workers=32,num_episodes=500) # 32*100 = 3200 episodes
+    # show_plt(result_list)
+    # print(result_list)
+    # print(np.mean(result_list))
+    # print(np.std(result_list))
+
+    result_list = train_ray(num_workers=8,each_worker_samples=4,num_episodes=500,batch_size=4096) # 32*100 = 3200 episodes
     show_plt(result_list)
+    print(result_list)
+    print(np.mean(result_list))
+    print(np.std(result_list))
