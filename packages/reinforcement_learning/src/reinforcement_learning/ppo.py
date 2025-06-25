@@ -4,6 +4,37 @@ import torch.nn.functional as F
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+import ray
+
+device = torch.device("mps") if torch.backends.mps.is_available() else \
+    torch.device("cuda") if torch.cuda.is_available() else \
+        torch.device("cpu")
+print(f"device: {device}")
+
+
+def moving_average(a, window_size):
+    cumulative_sum = np.cumsum(np.insert(a, 0, 0))
+    middle = (cumulative_sum[window_size:] - cumulative_sum[:-window_size]) / window_size
+    r = np.arange(1, window_size - 1, 2)
+    begin = np.cumsum(a[:window_size - 1])[::2] / r
+    end = (np.cumsum(a[:-window_size:-1])[::2] / r)[::-1]
+    return np.concatenate((begin, middle, end))
+
+
+def show_plt(return_list):
+    episodes_list = list(range(len(return_list)))
+    plt.plot(episodes_list, return_list)
+    plt.xlabel('Episodes')
+    plt.ylabel('Returns')
+    plt.title('PPO')
+    plt.show()
+
+    mv_return = moving_average(return_list, 9)
+    plt.plot(episodes_list, mv_return)
+    plt.xlabel('Episodes')
+    plt.ylabel('Returns')
+    plt.title('PPO')
+    plt.show()
 
 
 class PolicyNet(torch.nn.Module):
@@ -96,20 +127,17 @@ class PPO:
 
 actor_lr = 1e-3
 critic_lr = 1e-2
-num_episodes = 100
+
 hidden_dim = 128
+
 gamma = 0.98
 lmbda = 0.95
-epochs = 10
 eps = 0.2
-device = torch.device("mps") if torch.backends.mps.is_available() else \
-    torch.device("cuda") if torch.cuda.is_available() else \
-        torch.device("cpu")
-print(f"device: {device}")
-env_name = 'CartPole-v1'
 
 
-def train():
+def train(num_episodes=500,
+          epochs=10,
+          env_name='CartPole-v1', ):
     env = gym.make(env_name)
     env.reset(seed=0)
     torch.manual_seed(0)
@@ -139,31 +167,84 @@ def train():
     return return_list
 
 
-def moving_average(a, window_size):
-    cumulative_sum = np.cumsum(np.insert(a, 0, 0))
-    middle = (cumulative_sum[window_size:] - cumulative_sum[:-window_size]) / window_size
-    r = np.arange(1, window_size - 1, 2)
-    begin = np.cumsum(a[:window_size - 1])[::2] / r
-    end = (np.cumsum(a[:-window_size:-1])[::2] / r)[::-1]
-    return np.concatenate((begin, middle, end))
+@ray.remote
+class Worker:
+    def __init__(self, env_name, state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda, epochs, eps, gamma,
+                 device, seed):
+        import gymnasium as gym
+        self.env = gym.make(env_name)
+        self.env.reset(seed=seed)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        self.agent = PPO(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda, epochs, eps, gamma, device)
+        self.device = device
+
+    def set_weights(self, actor_weights, critic_weights):
+        self.agent.actor.load_state_dict(actor_weights)
+        self.agent.critic.load_state_dict(critic_weights)
+
+    def sample(self):
+        transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
+        state, info = self.env.reset()
+        done = False
+        episode_return = 0
+        while not done:
+            action = self.agent.take_action(state)
+            next_state, reward, terminated, truncated, info = self.env.step(action)
+            done = terminated or truncated
+            transition_dict['states'].append(state)
+            transition_dict['actions'].append(action)
+            transition_dict['next_states'].append(next_state)
+            transition_dict['rewards'].append(reward)
+            transition_dict['dones'].append(done)
+            state = next_state
+            episode_return += reward
+        return transition_dict, episode_return
 
 
-def show_plt(return_list):
-    episodes_list = list(range(len(return_list)))
-    plt.plot(episodes_list, return_list)
-    plt.xlabel('Episodes')
-    plt.ylabel('Returns')
-    plt.title('PPO on {}'.format(env_name))
-    plt.show()
+def train_ray(num_workers=4,
+              num_episodes=500,
+              epochs=10,
+              env_name='CartPole-v1',
+              ):
+    env = gym.make(env_name)
+    state_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.n
 
-    mv_return = moving_average(return_list, 9)
-    plt.plot(episodes_list, mv_return)
-    plt.xlabel('Episodes')
-    plt.ylabel('Returns')
-    plt.title('PPO on {}'.format(env_name))
-    plt.show()
+    agent = PPO(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda, epochs, eps, gamma, device)
+
+    ray.init(ignore_reinit_error=True)
+    workers = [
+        Worker.remote(env_name, state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda, epochs, eps, gamma,
+                      device, seed=i)
+        for i in range(num_workers)
+    ]
+
+    return_list = []
+    for _ in tqdm(range(num_episodes)):
+        actor_weights = agent.actor.state_dict()
+        critic_weights = agent.critic.state_dict()
+        set_weights_tasks = [w.set_weights.remote(actor_weights, critic_weights) for w in workers]
+        ray.get(set_weights_tasks)
+
+        sample_tasks = [w.sample.remote() for w in workers]
+        results = ray.get(sample_tasks)
+
+        all_transitions = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
+        episode_returns = []
+        for transition_dict, episode_return in results:
+            for k in all_transitions:
+                all_transitions[k].extend(transition_dict[k])
+            episode_returns.append(episode_return)
+
+        agent.update(all_transitions)
+        return_list.append(episode_returns)
+
+    ray.shutdown()
+    return return_list
 
 
 if __name__ == '__main__':
-    result_list = train()
+    # result_list = train()
+    result_list = train_ray(num_workers=32,num_episodes=100) # 32*100 = 3200 episodes
     show_plt(result_list)

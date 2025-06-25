@@ -24,6 +24,7 @@ dependencies = [
     # 其他重要库
     "sb3-contrib", # Stable-Baselines3扩展包（额外算法实现）
     "mujoco", # 物理仿真引擎（复杂机器人控制环境）
+    "ray[all]", # 分布式训练框架
     # openai
     "openai",
     # tools
