@@ -246,5 +246,5 @@ def train_ray(num_workers=4,
 
 if __name__ == '__main__':
     # result_list = train()
-    result_list = train_ray(num_workers=32,num_episodes=100) # 32*100 = 3200 episodes
+    result_list = train_ray(num_workers=32,num_episodes=500) # 32*100 = 3200 episodes
     show_plt(result_list)
