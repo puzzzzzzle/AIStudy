@@ -238,7 +238,7 @@ def train_ray(num_workers=4,
             episode_returns.append(episode_return)
 
         agent.update(all_transitions)
-        return_list.append(episode_returns)
+        return_list.append(np.mean(episode_returns))
 
     ray.shutdown()
     return return_list
