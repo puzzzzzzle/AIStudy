@@ -1,5 +1,7 @@
 # docs and experiment results can be found at https://docs.cleanrl.dev/rl-algorithms/ppo/#ppopy
 import os
+# 控制 pytorch 计算核心的数量
+# os.environ["MKL_NUM_THREADS"] = "1"
 import random
 import time
 from dataclasses import dataclass
