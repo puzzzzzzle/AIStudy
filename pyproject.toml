@@ -19,6 +19,7 @@ dependencies = [
     "torchvision", # 计算机视觉工具库，包含数据集/模型架构/图像变换方法
     "torchaudio", # 音频处理工具库，支持语音数据集和特征提取
     "pytorch-lightning", # PyTorch轻量级封装，简化训练流程和分布式训练
+    "tensorboard", # TensorBoard可视化工具
     # 强化学习专用库
     "stable-baselines3", # 最主流的RL实现库（PPO/DQN/SAC等算法）
     # 其他重要库
@@ -31,6 +32,8 @@ dependencies = [
     "pyyaml",
     "rich",
     "typer",
+    "tyro",
+    "pydantic",
     # gym games
     "gymnasium[all]", #依赖swig&c++编译环境, 手动安装 : pacman -Sy swig
     "notebook>=7.3.3",
