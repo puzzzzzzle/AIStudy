@@ -32,7 +32,7 @@ dependencies = [
     "pyyaml",
     "rich",
     "typer",
-    "tyro",
+    "tyro", # 类似 typer, 构建命令行的工具, 不过参数使用一个dataclass
     "pydantic",
     # gym games
     "gymnasium[all]", #依赖swig&c++编译环境, 手动安装 : pacman -Sy swig
