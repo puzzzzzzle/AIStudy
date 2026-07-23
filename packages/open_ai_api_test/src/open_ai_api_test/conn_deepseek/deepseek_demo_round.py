@@ -28,10 +28,16 @@ completion = client.chat.completions.create(
 print("=" * 20 + "第一轮对话" + "=" * 20)
 # 通过reasoning_content字段打印思考过程
 print("=" * 20 + "思考过程" + "=" * 20)
-print(completion.choices[0].message.reasoning_content)
+try:
+    print(completion.choices[0].message.reasoning_content)
+except Exception as e:
+    print(e)
 # 通过content字段打印最终答案
 print("=" * 20 + "最终答案" + "=" * 20)
-print(completion.choices[0].message.content)
+try:
+    print(completion.choices[0].message.content)
+except Exception as e:
+    print(e)
 
 messages.append({'role': 'assistant', 'content': completion.choices[0].message.content})
 messages.append({'role': 'user', 'content': '你是谁'})
@@ -42,7 +48,13 @@ completion = client.chat.completions.create(
 )
 # 通过reasoning_content字段打印思考过程
 print("=" * 20 + "思考过程" + "=" * 20)
-print(completion.choices[0].message.reasoning_content)
+try:
+    print(completion.choices[0].message.reasoning_content)
+except Exception as e:
+    print(e)
 # 通过content字段打印最终答案
 print("=" * 20 + "最终答案" + "=" * 20)
-print(completion.choices[0].message.content)
+try:
+    print(completion.choices[0].message.content)
+except Exception as e:
+    print(e)
